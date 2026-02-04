@@ -236,7 +236,13 @@ class CustomLiteLAProcessor2_0:
                 batch_size, channel, height, width
             )
 
-        if torch.get_autocast_gpu_dtype() == torch.float16:
+        autocast_dtype = None
+        if torch.is_autocast_enabled():
+            autocast_dtype = torch.get_autocast_gpu_dtype() if hasattr(torch, 'cuda') and torch.cuda.is_available() else None
+            if hasattr(torch, 'xpu') and torch.xpu.is_available():
+                autocast_dtype = torch.float16  # XPU typically uses float16 with autocast
+
+        if autocast_dtype == torch.float16:
             hidden_states = hidden_states.clip(-65504, 65504)
             if encoder_hidden_states is not None:
                 encoder_hidden_states = encoder_hidden_states.clip(-65504, 65504)

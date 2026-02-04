@@ -34,7 +34,14 @@ class TextToMusicResponse(BaseModel):
 
 class InferencePipeline:
     def __init__(self, checkpoint_dir: str, device: str = "cuda"):
-        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+        if torch.cuda.is_available():
+            self.device = torch.device(f"cuda:{device}" if device == "cuda" else torch.device(device))
+        elif hasattr(torch, 'xpu') and torch.xpu.is_available():
+            self.device = torch.device(f"xpu:{device}" if device == "cuda" else torch.device(device))
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        else:
+            self.device = torch.device("cpu")
         logger.info(f"Initializing model on device: {self.device}")
 
         # Load the ACEStepPipeline

@@ -52,8 +52,6 @@ def main(checkpoint_path, server_name, port, device_id, share, bf16, torch_compi
     Main function to launch the ACE Step pipeline demo.
     """
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
-
     from acestep.ui.components import create_main_demo_ui
     from acestep.pipeline_ace_step import ACEStepPipeline
     from acestep.data_sampler import DataSampler

@@ -54,6 +54,9 @@ torch.backends.cudnn.benchmark = False
 torch.set_float32_matmul_precision("high")
 torch.backends.cudnn.deterministic = True
 torch.backends.cuda.matmul.allow_tf32 = True
+
+if hasattr(torch, 'xpu') and torch.xpu.is_available():
+    logger.info("Intel XPU detected and enabled")
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
@@ -118,13 +121,14 @@ class ACEStepPipeline:
         self.checkpoint_dir = checkpoint_dir
         self.lora_path = "none"
         self.lora_weight = 1
-        device = (
-            torch.device(f"cuda:{device_id}")
-            if torch.cuda.is_available()
-            else torch.device("cpu")
-        )
-        if device.type == "cpu" and torch.backends.mps.is_available():
+        if torch.cuda.is_available():
+            device = torch.device(f"cuda:{device_id}")
+        elif hasattr(torch, 'xpu') and torch.xpu.is_available():
+            device = torch.device(f"xpu:{device_id}")
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
             device = torch.device("mps")
+        else:
+            device = torch.device("cpu")
         self.dtype = torch.bfloat16 if dtype == "bfloat16" else torch.float32
         if device.type == "mps" and self.dtype == torch.bfloat16:
             self.dtype = torch.float16
@@ -144,11 +148,22 @@ class ACEStepPipeline:
         # Clear CUDA cache
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+            torch.cuda.synchronize()
 
             # Log memory usage if in verbose mode
             allocated = torch.cuda.memory_allocated() / (1024 ** 3)
             reserved = torch.cuda.memory_reserved() / (1024 ** 3)
-            logger.info(f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
+            logger.info(f"CUDA Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
+
+        # Clear XPU cache
+        if hasattr(torch, 'xpu') and torch.xpu.is_available():
+            torch.xpu.empty_cache()
+            torch.xpu.synchronize()
+
+            # Log memory usage
+            allocated = torch.xpu.memory_allocated() / (1024 ** 3)
+            reserved = torch.xpu.memory_reserved() / (1024 ** 3)
+            logger.info(f"XPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
 
         # Collect Python garbage
         import gc

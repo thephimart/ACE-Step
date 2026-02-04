@@ -31,6 +31,10 @@ from acestep.pipeline_ace_step import ACEStepPipeline
 matplotlib.use("Agg")
 torch.backends.cudnn.benchmark = False
 torch.set_float32_matmul_precision("high")
+torch.backends.cudnn.deterministic = True
+
+if hasattr(torch, 'xpu') and torch.xpu.is_available():
+    logger.info("Intel XPU detected and enabled")
 
 
 class Pipeline(LightningModule):
@@ -325,7 +329,7 @@ class Pipeline(LightningModule):
         mert_ssl_hidden_states = None
         mhubert_ssl_hidden_states = None
         if train:
-            with torch.amp.autocast(device_type="cuda", dtype=dtype):
+            with torch.amp.autocast(device_type=device.type, dtype=dtype):
                 mert_ssl_hidden_states = self.infer_mert_ssl(target_wavs, wav_lengths)
                 mhubert_ssl_hidden_states = self.infer_mhubert_ssl(
                     target_wavs, wav_lengths
@@ -776,11 +780,17 @@ class Pipeline(LightningModule):
 
     def plot_step(self, batch, batch_idx):
         global_step = self.global_step
+        device_id = 0
+        if torch.cuda.is_available():
+            device_id = torch.cuda.current_device()
+        elif hasattr(torch, 'xpu') and torch.xpu.is_available():
+            device_id = torch.xpu.current_device()
+
         if (
             global_step % self.hparams.every_plot_step != 0
             or self.local_rank != 0
             or torch.distributed.get_rank() != 0
-            or torch.cuda.current_device() != 0
+            or device_id != 0
         ):
             return
         results = self.predict_step(batch)
@@ -839,8 +849,16 @@ def main(args):
         version=datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + args.exp_name,
         save_dir=args.logger_dir,
     )
+    def get_lightning_accelerator():
+        if hasattr(torch, 'xpu') and torch.xpu.is_available():
+            return "xpu"
+        elif torch.cuda.is_available():
+            return "gpu"
+        else:
+            return "cpu"
+
     trainer = Trainer(
-        accelerator="gpu",
+        accelerator=get_lightning_accelerator(),
         devices=args.devices,
         num_nodes=args.num_nodes,
         precision=args.precision,

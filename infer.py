@@ -49,8 +49,6 @@ def sample_data(json_data):
 @click.option("--device_id", type=int, default=0, help="Device ID to use")
 @click.option("--output_path", type=str, default=None, help="Path to save the output")
 def main(checkpoint_path, bf16, torch_compile, cpu_offload, overlapped_decode, device_id, output_path):
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
-
     model_demo = ACEStepPipeline(
         checkpoint_dir=checkpoint_path,
         dtype="bfloat16" if bf16 else "float32",

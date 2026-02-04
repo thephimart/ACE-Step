@@ -1,0 +1,38 @@
+# ACE-Step XPU Requirements - Part 2
+#
+# Packages NOT available in XPU index - install from PyPI
+#
+# Installation Instructions:
+#
+# Step 1: Install XPU packages (with --pre)
+# pip install --pre -r requirements-xpu-part1.txt --index-url https://download.pytorch.org/whl/nightly/xpu
+#
+# Step 2: Install missing packages from PyPI (this file)
+# pip install -r requirements-xpu-part2.txt
+#
+# Step 3: Install ACE-Step
+# pip install -e ".[xpu]"
+#
+# For complete installation script, see: INSTALL_XPU.md
+
+# ========================================
+# Part 2: Packages NOT in XPU Index
+# ========================================
+# These packages are NOT available in PyTorch XPU nightly index
+# Install with: pip install -r requirements-xpu-part2.txt
+
+diffusers>=0.33.0
+gradio
+librosa==0.11.0
+loguru==0.7.3
+pypinyin==0.53.0
+pytorch_lightning==2.5.1
+py3langid==0.3.0
+hangul-romanize==0.1.0
+num2words==0.5.14
+spacy==3.8.4
+cutlet
+fugashi[unidic-lite]
+peft
+tensorboard
+tensorboardX

@@ -29,6 +29,6 @@ setup(
             "peft",
             "tensorboard",
             "tensorboardX"
-        ]
+        ],
     },
 )
