@@ -30,11 +30,3 @@ torchaudio
 transformers
 tokenizers
 datasets
-accelerate
-numpy
-matplotlib
-tqdm
-fastapi
-uvicorn
-click
-soundfile

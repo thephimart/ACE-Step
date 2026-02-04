@@ -41,7 +41,14 @@ pip install -e ".[xpu]"
 echo "✓ ACE-Step installed"
 echo ""
 
-# Step 5: Verify installation
+# Step 5: Set environment variable for large memory allocations
+echo "Step 5: Setting environment variable for XPU large memory allocations..."
+echo "export SYCL_UR_USE_LEVEL_ZERO_V2=1" >> ~/.bashrc
+echo "✓ Added SYCL_UR_USE_LEVEL_ZERO_V2=1 to ~/.bashrc"
+echo "⚠ Please run: source ~/.bashrc (or open a new terminal) to apply changes"
+echo ""
+
+# Step 6: Verify installation
 echo "Step 5: Verifying installation..."
 echo ""
 
@@ -69,8 +76,9 @@ echo "Installation complete!"
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "  1. Activate the environment: conda activate acestep-xpu"
-echo "  2. Run inference: acestep --port 7865"
-echo "  3. Or run training: python trainer.py --dataset_path <path>"
+echo "  1. Apply environment variable: source ~/.bashrc"
+echo "  2. Activate the environment: conda activate acestep-xpu"
+echo "  3. Run inference: acestep --port 7865"
+echo "  4. Or run training: python trainer.py --dataset_path <path>"
 echo ""
 echo "For more information, see INSTALL_XPU.md"

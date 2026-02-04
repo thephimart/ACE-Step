@@ -29,15 +29,7 @@ pip install --pre \
 - transformers
 - tokenizers
 - datasets
-- accelerate
-- numpy
-- matplotlib
-- tqdm
-- fastapi
-- uvicorn
-- click
-- soundfile
-- plus all XPU-specific dependencies automatically
+- plus all XPU-specific dependencies automatically (triton-xpu, intel-sycl-rt, onemkl-*, etc.)
 
 ### Step 2: Install Missing Packages from PyPI
 
@@ -62,13 +54,27 @@ pip install \
   tensorboardX
 ```
 
-### Step 3: Install ACE-Step
+### Step 3: Set Environment Variable for Large Memory Allocations
+
+**IMPORTANT:** To enable XPU memory allocations over 4GB, you must set this environment variable:
+
+```bash
+# Add to ~/.bashrc for persistent configuration
+echo "export SYCL_UR_USE_LEVEL_ZERO_V2=1" >> ~/.bashrc
+
+# Source bashrc to apply changes in current session
+source ~/.bashrc
+```
+
+This is required for large model inference and training with ACE-Step on Intel Arc GPUs.
+
+### Step 4: Install ACE-Step
 
 ```bash
 pip install -e ".[xpu]"
 ```
 
-### Step 4: Verify XPU Installation
+### Step 5: Verify XPU Installation
 
 ```bash
 python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'XPU available: {torch.xpu.is_available() if hasattr(torch, \"xpu\") else False}')"
@@ -143,9 +149,16 @@ echo ""
 echo "Step 3: Installing ACE-Step..."
 pip install -e ".[xpu]"
 
-# Step 5: Verify
+# Step 5: Set environment variable for large memory allocations
 echo ""
-echo "Step 4: Verifying installation..."
+echo "Step 4: Setting environment variable for XPU large memory allocations..."
+echo "export SYCL_UR_USE_LEVEL_ZERO_V2=1" >> ~/.bashrc
+echo "✓ Added SYCL_UR_USE_LEVEL_ZERO_V2=1 to ~/.bashrc"
+echo "⚠ Please run: source ~/.bashrc (or open a new terminal) to apply changes"
+
+# Step 6: Verify
+echo ""
+echo "Step 5: Verifying installation..."
 python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'XPU available: {torch.xpu.is_available() if hasattr(torch, \"xpu\") else False}')"
 
 echo ""
@@ -253,6 +266,19 @@ pip install <package>
 2. Verify oneAPI environment variables are set
 3. Run `clinfo` to check GPU availability
 
+### Issue 4: Out of Memory or Allocation Errors (>4GB)
+
+**Symptom:** Memory allocation errors when loading large models or training
+
+**Solution:** Set the SYCL environment variable to enable large memory allocations:
+```bash
+# Add to ~/.bashrc
+echo "export SYCL_UR_USE_LEVEL_ZERO_V2=1" >> ~/.bashrc
+source ~/.bashrc
+```
+
+This is **required** for ACE-Step which requires large memory allocations for model loading and inference.
+
 ---
 
 ## Verification Commands
@@ -276,9 +302,10 @@ pip list | grep -E "torch|transformers|diffusers|datasets"
 
 **XPU users require a separate installation path:**
 
-1. **14 packages** from XPU index (with --pre flag)
-2. **13 packages** from PyPI (not available in XPU index)
-3. **Total:** 27 packages
+1. **6 packages** from XPU index (with --pre flag)
+2. **19 packages** from PyPI (not available in XPU index)
+3. **Total:** 25 packages (plus 50+ XPU-specific dependencies auto-installed)
+4. **Environment variable:** `export SYCL_UR_USE_LEVEL_ZERO_V2=1` (required for >4GB allocations)
 
 **CUDA/CPU/MPS users:**
 

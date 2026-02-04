@@ -21,6 +21,14 @@
 # These packages are NOT available in PyTorch XPU nightly index
 # Install with: pip install -r requirements-xpu-part2.txt
 
+accelerate
+numpy
+matplotlib
+tqdm
+fastapi
+uvicorn
+click
+soundfile
 diffusers>=0.33.0
 gradio
 librosa==0.11.0
