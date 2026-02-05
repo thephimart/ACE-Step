@@ -54,7 +54,43 @@ pip install \
   tensorboardX
 ```
 
-### Step 3: Set Environment Variable for Large Memory Allocations
+### Step 3: Install FFmpeg6 (Required for torchcodec)
+
+**IMPORTANT:** torchcodec requires FFmpeg with matching libraries. If pre-built FFmpeg packages don't work, you may need to build from source:
+
+```bash
+# Option 1: Try pre-built package first
+sudo apt-get update && sudo apt-get install -y ffmpeg6
+
+# Option 2: Build FFmpeg6 from source (if package doesn't work)
+sudo apt-get install -y build-essential nasm yasm
+cd /tmp
+wget https://ffmpeg.org/releases/ffmpeg-6.0.tar.bz2
+tar xjf ffmpeg-6.0.tar.bz2
+cd ffmpeg-6.0
+./configure --enable-shared --disable-static --prefix=/usr/local
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+```
+
+### Step 4: Install torchcodec (Compatible with PyTorch XPU)
+
+**IMPORTANT:** torchcodec must be compatible with your PyTorch version. If pre-built packages fail, build from source:
+
+```bash
+# Option 1: Try pre-built package first
+pip install torchcodec
+
+# Option 2: Build torchcodec from source (if package doesn't work)
+git clone https://github.com/pytorch/torchcodec.git
+cd torchcodec
+python setup.py develop
+```
+
+**Note:** PyTorch XPU nightly builds may require building torchcodec from source due to compatibility issues.
+
+### Step 5: Set Environment Variable for Large Memory Allocations
 
 **IMPORTANT:** To enable XPU memory allocations over 4GB, you must set this environment variable:
 
@@ -68,13 +104,13 @@ source ~/.bashrc
 
 This is required for large model inference and training with ACE-Step on Intel Arc GPUs.
 
-### Step 4: Install ACE-Step
+### Step 6: Install ACE-Step
 
 ```bash
 pip install -e ".[xpu]"
 ```
 
-### Step 5: Verify XPU Installation
+### Step 7: Verify XPU Installation
 
 ```bash
 python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'XPU available: {torch.xpu.is_available() if hasattr(torch, \"xpu\") else False}')"
@@ -124,9 +160,21 @@ pip install --pre \
   soundfile \
   --index-url https://download.pytorch.org/whl/nightly/xpu
 
-# Step 3: Install missing packages from PyPI
+# Step 3: Install FFmpeg6
 echo ""
-echo "Step 2: Installing packages not available in XPU index..."
+echo "Step 2: Installing FFmpeg6..."
+echo "Note: May need to build from source if package installation fails"
+sudo apt-get update && sudo apt-get install -y ffmpeg6
+
+# Step 4: Install torchcodec
+echo ""
+echo "Step 3: Installing torchcodec..."
+echo "Note: May need to build from source if package installation fails"
+pip install torchcodec
+
+# Step 5: Install missing packages from PyPI
+echo ""
+echo "Step 4: Installing packages not available in XPU index..."
 pip install \
   "diffusers>=0.33.0" \
   gradio \
@@ -144,21 +192,21 @@ pip install \
   tensorboard \
   tensorboardX
 
-# Step 4: Install ACE-Step
+# Step 6: Install ACE-Step
 echo ""
-echo "Step 3: Installing ACE-Step..."
+echo "Step 5: Installing ACE-Step..."
 pip install -e ".[xpu]"
 
-# Step 5: Set environment variable for large memory allocations
+# Step 7: Set environment variable for large memory allocations
 echo ""
-echo "Step 4: Setting environment variable for XPU large memory allocations..."
+echo "Step 6: Setting environment variable for XPU large memory allocations..."
 echo "export SYCL_UR_USE_LEVEL_ZERO_V2=1" >> ~/.bashrc
 echo "✓ Added SYCL_UR_USE_LEVEL_ZERO_V2=1 to ~/.bashrc"
 echo "⚠ Please run: source ~/.bashrc (or open a new terminal) to apply changes"
 
-# Step 6: Verify
+# Step 8: Verify
 echo ""
-echo "Step 5: Verifying installation..."
+echo "Step 7: Verifying installation..."
 python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'XPU available: {torch.xpu.is_available() if hasattr(torch, \"xpu\") else False}')"
 
 echo ""
@@ -171,6 +219,12 @@ Save this as `install_xpu.sh` and run with:
 ```bash
 bash install_xpu.sh
 ```
+
+**Note:** If torchaudio.save() fails during inference, you may need to:
+1. Build FFmpeg6 from source (see Step 3 above)
+2. Build torchcodec from source (see Step 4 above)
+
+This is common with PyTorch XPU nightly builds due to version compatibility issues.
 
 ---
 
@@ -192,6 +246,7 @@ bash install_xpu.sh
 | uvicorn | ✅ | ✅ | XPU index | PyPI |
 | click | ✅ | ✅ | XPU index | PyPI |
 | soundfile | ✅ | ✅ | XPU index | PyPI |
+| torchcodec | ❌ | ❌ | **Build from source** | N/A |
 | **diffusers** | ❌ | ✅ | **PyPI** | PyPI |
 | **gradio** | ❌ | ✅ | **PyPI** | PyPI |
 | **librosa** | ❌ | ✅ | **PyPI** | PyPI |
@@ -207,6 +262,7 @@ bash install_xpu.sh
 | **peft** | ❌ | ✅ | **PyPI** | PyPI |
 | **tensorboard** | ❌ | ✅ | **PyPI** | PyPI |
 | **tensorboardX** | ❌ | ✅ | **PyPI** | PyPI |
+| **ffmpeg6** | ❌ | ❌ | **System package** | System |
 
 ---
 
@@ -278,6 +334,23 @@ source ~/.bashrc
 ```
 
 This is **required** for ACE-Step which requires large memory allocations for model loading and inference.
+
+### Issue 5: torchcodec ImportError - Missing FFmpeg Libraries
+
+**Symptom:** `ModuleNotFoundError: No module named 'torchcodec'` or `OSError: Could not load libtorchcodec`
+
+**Solution:** Install FFmpeg6 and build torchcodec compatible with your PyTorch version:
+```bash
+# Install FFmpeg6 (may need to build from source)
+sudo apt-get install -y ffmpeg6
+# OR build from source (see Step 3 above)
+
+# Install torchcodec (may need to build from source)
+pip install torchcodec
+# OR build from source (see Step 4 above)
+```
+
+**Note:** PyTorch XPU nightly builds often require building both FFmpeg6 and torchcodec from source due to compatibility issues.
 
 ---
 
