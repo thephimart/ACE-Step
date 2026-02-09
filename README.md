@@ -1,7 +1,8 @@
 <h1 align="center">ACE-Step</h1>
 <h1 align="center">A Step Towards Music Generation Foundation Model</h1>
 
-> **🚀 REFACTORED FOR XPU** - Now supports Intel Arc GPUs while SHOULD (untested) maintain full backward compatibility with CUDA and MPS. See [INSTALL_XPU.md](./INSTALL_XPU.md) for XPU installation instructions.
+> **🚀 REFACTORED FOR XPU** - Now supports Intel Arc GPUs while SHOULD (untested) maintain full backward compatibility with CUDA and MPS. See [INSTALL_XPU.md](./INSTALL_XPU.md) for XPU installation instructions. **
+> ** Unmaintained ... ACE-Step v1.5 released with Intel support. **
 
 <p align="center">
     <a href="https://ace-step.github.io/">Project</a> |
